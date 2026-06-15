@@ -1,7 +1,61 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { TaskLog } from "@/types";
+import type React from "react";
+import type { AirflowLogEntry, TaskLog } from "@/types";
+
+const LEVEL_COLOURS: Record<string, string> = {
+  error: "text-red-400",
+  critical: "text-red-400",
+  warning: "text-amber-400",
+  warn: "text-amber-400",
+  info: "text-emerald-400",
+  debug: "text-slate-400",
+};
+
+function formatTimestamp(ts: string): string {
+  try {
+    const d = new Date(ts);
+    return d.toTimeString().slice(0, 8);
+  } catch {
+    return ts;
+  }
+}
+
+function renderEntries(entries: AirflowLogEntry[]): React.ReactNode[] {
+  return entries
+    .filter(
+      (e) => e.timestamp && e.event && !e.event.startsWith("::"),
+    )
+    .map((e, i) => {
+      const level = (e.level ?? "info").toLowerCase();
+      const colour = LEVEL_COLOURS[level] ?? "text-emerald-400";
+      const levelTag = level.toUpperCase().padEnd(8);
+      return (
+        <span key={i} className="block leading-5">
+          <span className="text-slate-500">{formatTimestamp(e.timestamp!)}</span>
+          {" "}
+          <span className={colour}>{levelTag}</span>
+          {" "}
+          <span className="text-emerald-300">{e.event}</span>
+        </span>
+      );
+    });
+}
+
+function LogContent({ content }: { content: TaskLog["content"] }) {
+  if (typeof content === "string") {
+    return <span>{content}</span>;
+  }
+  if (Array.isArray(content)) {
+    const nodes = renderEntries(content as AirflowLogEntry[]);
+    if (nodes.length === 0) {
+      return <span className="text-slate-500">No log output yet.</span>;
+    }
+    return <>{nodes}</>;
+  }
+  return <span className="text-slate-500">No log output.</span>;
+}
 
 export function LogViewer({ logs }: { logs: TaskLog[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -35,10 +89,8 @@ export function LogViewer({ logs }: { logs: TaskLog[] }) {
               attempt #{log.try_number}
             </span>
           </div>
-          <pre className="max-h-96 overflow-y-auto whitespace-pre-wrap break-all bg-slate-950 px-4 py-4 font-mono text-xs leading-5 text-emerald-400">
-            {typeof log.content === "string"
-              ? log.content
-              : JSON.stringify(log.content, null, 2)}
+          <pre className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap break-all bg-slate-950 px-4 py-4 font-mono text-xs leading-5">
+            <LogContent content={log.content} />
           </pre>
         </div>
       ))}

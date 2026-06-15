@@ -25,29 +25,39 @@ export async function getLogsForRun(
   dagId: string,
   runId: string,
 ): Promise<TaskLog[]> {
-  const tasksData = await airflowRequest(
-    "get",
-    `/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances`,
-  );
-  const tasks: Array<{ task_id: string; try_number: number }> =
-    tasksData.task_instances ?? [];
+  let tasksData: { task_instances?: Array<{ task_id: string; try_number: number; map_index?: number }> };
+  try {
+    tasksData = await airflowRequest(
+      "get",
+      `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}/taskInstances`,
+    );
+  } catch (err) {
+    console.error("[dag-service] taskInstances fetch failed", { dagId, runId }, err);
+    return [];
+  }
+
+  const tasks = tasksData.task_instances ?? [];
+  if (tasks.length === 0) return [];
 
   return Promise.all(
     tasks.map(async (task) => {
+      const tryNumber = Math.max(1, task.try_number || 1);
+      const mapIndex = task.map_index ?? -1;
+      const logPath =
+        mapIndex >= 0
+          ? `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}/taskInstances/${task.task_id}/${mapIndex}/logs/${tryNumber}`
+          : `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}/taskInstances/${task.task_id}/logs/${tryNumber}`;
       try {
-        const logData = await airflowRequest(
-          "get",
-          `/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances/${task.task_id}/logs/${task.try_number ?? 1}`,
-        );
+        const logData = await airflowRequest("get", logPath);
         return {
           task_id: task.task_id,
-          try_number: task.try_number ?? 1,
+          try_number: tryNumber,
           content: logData.content ?? logData,
         };
       } catch {
         return {
           task_id: task.task_id,
-          try_number: task.try_number ?? 1,
+          try_number: tryNumber,
           content: "[Log unavailable]",
         };
       }
