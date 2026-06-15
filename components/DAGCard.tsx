@@ -2,30 +2,36 @@
 
 import { Calendar, Clock, Play } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { DAG } from "@/types";
 import { StatusBadge } from "./StatusBadge";
 
 export function DAGCard({ dag }: { dag: DAG }) {
+  const router = useRouter();
   const [triggering, setTriggering] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleTrigger() {
     setTriggering(true);
-    setMessage(null);
+    setError(null);
     try {
       const res = await fetch(`/api/airflow/dags/${dag.dag_id}/trigger`, {
         method: "POST",
       });
       if (res.ok) {
-        setMessage("Run triggered successfully");
+        const run = await res.json();
+        const runId = run.dag_run_id as string;
+        router.push(
+          `/dashboard/${dag.dag_id}/runs/${encodeURIComponent(runId)}`,
+        );
       } else {
         const body = await res.json();
-        setMessage(body.error ?? "Trigger failed");
+        setError(body.error ?? "Trigger failed");
+        setTriggering(false);
       }
     } catch {
-      setMessage("Network error");
-    } finally {
+      setError("Network error");
       setTriggering(false);
     }
   }
@@ -79,12 +85,8 @@ export function DAGCard({ dag }: { dag: DAG }) {
         >
           View history
         </Link>
-        {message && (
-          <span
-            className={`text-xs ${message.includes("success") ? "text-green-600" : "text-red-600"}`}
-          >
-            {message}
-          </span>
+        {error && (
+          <span className="text-xs text-red-600">{error}</span>
         )}
       </div>
     </div>
