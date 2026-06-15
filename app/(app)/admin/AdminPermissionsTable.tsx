@@ -56,30 +56,47 @@ export function AdminPermissionsTable({
   }
 
   if (users.length === 0) {
-    return <p className="text-sm text-gray-500">No users found.</p>;
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 p-12 text-center">
+        <p className="text-sm text-slate-400">No users found.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {users.map(({ email }) => {
         const assigned = state[email] ?? [];
         const isWildcard = assigned.includes("*");
 
         return (
-          <div key={email} className="rounded-lg border bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <div>
-                <p className="font-semibold text-gray-900">{email}</p>
-                <p className="text-xs text-gray-500">
-                  {isWildcard
-                    ? "All DAGs (wildcard)"
-                    : `${assigned.length} DAG${assigned.length !== 1 ? "s" : ""} assigned`}
-                </p>
+          <div
+            key={email}
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+          >
+            {/* Card header */}
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
+                  {email.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{email}</p>
+                  <p className="text-xs text-slate-500">
+                    {isWildcard
+                      ? "All DAGs (wildcard)"
+                      : `${assigned.length} DAG${assigned.length !== 1 ? "s" : ""} assigned`}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => saveUser(email)}
                 disabled={saving[email]}
-                className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-all disabled:opacity-50 ${
+                  saved[email]
+                    ? "bg-emerald-500 text-white shadow-emerald-500/20"
+                    : "bg-indigo-600 text-white shadow-indigo-500/20 hover:bg-indigo-700"
+                }`}
               >
                 {saved[email] ? (
                   <>
@@ -95,43 +112,44 @@ export function AdminPermissionsTable({
               </button>
             </div>
 
-            {allDagIds.length === 0 ? (
-              <p className="text-xs text-gray-400">
-                No DAGs available from Airflow.
-              </p>
-            ) : (
-              <>
-                <div className="mb-2 flex items-center gap-2">
+            {/* DAG toggles */}
+            <div className="px-5 py-4">
+              {allDagIds.length === 0 ? (
+                <p className="text-xs text-slate-400">
+                  No DAGs available from Airflow.
+                </p>
+              ) : (
+                <>
                   <button
                     onClick={() => toggleAll(email)}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="mb-3 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                   >
                     {allDagIds.every((d) => assigned.includes(d))
                       ? "Deselect all"
                       : "Select all"}
                   </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {allDagIds.map((dagId) => {
-                    const selected = assigned.includes(dagId) || isWildcard;
-                    return (
-                      <button
-                        key={dagId}
-                        onClick={() => toggleDag(email, dagId)}
-                        disabled={isWildcard}
-                        className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                          selected
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                        } disabled:cursor-not-allowed disabled:opacity-60`}
-                      >
-                        {dagId}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+                  <div className="flex flex-wrap gap-2">
+                    {allDagIds.map((dagId) => {
+                      const selected = assigned.includes(dagId) || isWildcard;
+                      return (
+                        <button
+                          key={dagId}
+                          onClick={() => toggleDag(email, dagId)}
+                          disabled={isWildcard}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
+                            selected
+                              ? "bg-indigo-50 text-indigo-700 ring-indigo-500/30 hover:bg-indigo-100"
+                              : "bg-white text-slate-600 ring-slate-200 hover:ring-slate-300"
+                          } disabled:cursor-not-allowed disabled:opacity-60`}
+                        >
+                          {dagId}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         );
       })}

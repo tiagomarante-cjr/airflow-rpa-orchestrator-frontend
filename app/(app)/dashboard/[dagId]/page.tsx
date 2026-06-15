@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, History } from "lucide-react";
 import Link from "next/link";
 import { RunsTable } from "@/components/RunsTable";
 import { getRunsForDag } from "@/lib/dag-service";
@@ -13,16 +13,25 @@ export default async function RunHistoryPage({
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-8">
         <Link
           href="/dashboard"
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Back to Dashboard
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Dashboard
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">{dagId}</h1>
-        <p className="text-sm text-gray-500 mt-1">Run history</p>
+        <div className="mt-3 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100">
+            <History className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">{dagId}</h1>
+            <p className="text-xs text-slate-500">
+              {runs.length} run{runs.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
       </div>
 
       <RunsTable dagId={dagId} runs={runs} />

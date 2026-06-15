@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Terminal } from "lucide-react";
 import Link from "next/link";
 import { LiveLogViewer } from "@/components/LiveLogViewer";
 
@@ -12,16 +12,23 @@ export default async function LogViewerPage({
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-8">
         <Link
           href={`/dashboard/${dagId}`}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Back to {dagId}
+          <ChevronLeft className="h-3.5 w-3.5" />
+          {dagId}
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">Run Logs</h1>
-        <p className="mt-1 font-mono text-xs text-gray-400">{decodedRunId}</p>
+        <div className="mt-3 flex items-start gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800">
+            <Terminal className="h-4 w-4 text-emerald-400" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Run Logs</h1>
+            <p className="mt-0.5 font-mono text-xs text-slate-400">{decodedRunId}</p>
+          </div>
+        </div>
       </div>
 
       <LiveLogViewer dagId={dagId} runId={decodedRunId} />
