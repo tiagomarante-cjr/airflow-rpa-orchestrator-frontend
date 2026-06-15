@@ -1,10 +1,90 @@
 "use client";
 
-import { Activity, Calendar, Clock, Play } from "lucide-react";
+import { Activity, Calendar, CheckCircle2, Clock, Loader2, Play, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { DAG } from "@/types";
-import { StatusBadge } from "./StatusBadge";
+
+function parseCron(expr: string): string {
+  const named: Record<string, string> = {
+    "@daily": "Daily at midnight",
+    "@hourly": "Every hour",
+    "@weekly": "Weekly on Sunday",
+    "@monthly": "Monthly on the 1st",
+    "@yearly": "Yearly on Jan 1st",
+    "@once": "Once",
+    None: "No schedule",
+  };
+  if (named[expr]) return named[expr];
+
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length !== 5) return expr;
+
+  const [minute, hour, dom, month, dow] = parts;
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const timeLabel =
+    hour !== "*" && minute !== "*"
+      ? `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`
+      : null;
+
+  if (dom === "*" && month === "*" && dow === "*") {
+    if (timeLabel) return `Daily at ${timeLabel}`;
+    if (hour.startsWith("*/")) return `Every ${hour.slice(2)} hours`;
+    if (minute.startsWith("*/")) return `Every ${minute.slice(2)} minutes`;
+  }
+
+  if (dom === "*" && month === "*" && /^\d$/.test(dow) && timeLabel)
+    return `Weekly on ${DAYS[+dow]} at ${timeLabel}`;
+
+  if (dom !== "*" && month === "*" && dow === "*" && timeLabel)
+    return `Monthly on day ${dom} at ${timeLabel}`;
+
+  return expr;
+}
+
+function formatNextRun(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const diffH = Math.round(diffMs / 1000 / 3600);
+  const diffM = Math.round(diffMs / 1000 / 60);
+
+  if (diffM < 60) return `in ${diffM}m`;
+  if (diffH < 24) return `in ${diffH}h`;
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function LastRunIcon({ state }: { state: string }) {
+  if (state === "success")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+        <CheckCircle2 className="h-3 w-3" />
+        Successful
+      </span>
+    );
+  if (state === "failed")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
+        <XCircle className="h-3 w-3" />
+        Failed
+      </span>
+    );
+  if (state === "running")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Running
+      </span>
+    );
+  return null;
+}
 
 export function DAGCard({ dag }: { dag: DAG }) {
   const [triggering, setTriggering] = useState(false);
@@ -45,12 +125,10 @@ export function DAGCard({ dag }: { dag: DAG }) {
             {dag.dag_id}
           </Link>
           {dag.description && (
-            <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-              {dag.description}
-            </p>
+            <p className="mt-1 line-clamp-2 text-xs text-slate-500">{dag.description}</p>
           )}
         </div>
-        {dag.last_run && <StatusBadge state={dag.last_run.state} />}
+        {dag.last_run && <LastRunIcon state={dag.last_run.state} />}
       </div>
 
       {/* Meta row */}
@@ -58,13 +136,13 @@ export function DAGCard({ dag }: { dag: DAG }) {
         {dag.schedule_interval && (
           <span className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
-            {dag.schedule_interval}
+            {parseCron(dag.schedule_interval)}
           </span>
         )}
         {dag.next_dagrun && (
           <span className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5" />
-            {new Date(dag.next_dagrun).toLocaleString()}
+            Next run {formatNextRun(dag.next_dagrun)}
           </span>
         )}
       </div>
@@ -73,7 +151,7 @@ export function DAGCard({ dag }: { dag: DAG }) {
       <div className="my-4 h-px bg-slate-100" />
 
       {/* Actions */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={handleTrigger}
           disabled={triggering}
