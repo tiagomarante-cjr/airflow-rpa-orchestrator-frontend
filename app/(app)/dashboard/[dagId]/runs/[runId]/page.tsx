@@ -1,7 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { LogViewer } from "@/components/LogViewer";
-import { getLogsForRun } from "@/lib/dag-service";
+import { LiveLogViewer } from "@/components/LiveLogViewer";
 
 export default async function LogViewerPage({
   params,
@@ -9,7 +8,7 @@ export default async function LogViewerPage({
   params: Promise<{ dagId: string; runId: string }>;
 }) {
   const { dagId, runId } = await params;
-  const logs = await getLogsForRun(dagId, decodeURIComponent(runId));
+  const decodedRunId = decodeURIComponent(runId);
 
   return (
     <div>
@@ -22,12 +21,10 @@ export default async function LogViewerPage({
           Back to {dagId}
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">Run Logs</h1>
-        <p className="mt-1 font-mono text-xs text-gray-400">
-          {decodeURIComponent(runId)}
-        </p>
+        <p className="mt-1 font-mono text-xs text-gray-400">{decodedRunId}</p>
       </div>
 
-      <LogViewer logs={logs} />
+      <LiveLogViewer dagId={dagId} runId={decodedRunId} />
     </div>
   );
 }
