@@ -1,37 +1,34 @@
 "use client";
 
-import { Calendar, Clock, Play } from "lucide-react";
+import { Activity, Calendar, Clock, Play } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { DAG } from "@/types";
 import { StatusBadge } from "./StatusBadge";
 
 export function DAGCard({ dag }: { dag: DAG }) {
-  const router = useRouter();
   const [triggering, setTriggering] = useState(false);
+  const [triggeredRunId, setTriggeredRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleTrigger() {
     setTriggering(true);
     setError(null);
+    setTriggeredRunId(null);
     try {
       const res = await fetch(`/api/airflow/dags/${dag.dag_id}/trigger`, {
         method: "POST",
       });
       if (res.ok) {
         const run = await res.json();
-        const runId = run.dag_run_id as string;
-        router.push(
-          `/dashboard/${dag.dag_id}/runs/${encodeURIComponent(runId)}`,
-        );
+        setTriggeredRunId(run.dag_run_id as string);
       } else {
         const body = await res.json();
         setError(body.error ?? "Trigger failed");
-        setTriggering(false);
       }
     } catch {
       setError("Network error");
+    } finally {
       setTriggering(false);
     }
   }
@@ -70,7 +67,7 @@ export function DAGCard({ dag }: { dag: DAG }) {
         )}
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex items-center gap-3 flex-wrap">
         <button
           onClick={handleTrigger}
           disabled={triggering}
@@ -79,15 +76,25 @@ export function DAGCard({ dag }: { dag: DAG }) {
           <Play className="h-3.5 w-3.5" />
           {triggering ? "Triggering…" : "Trigger Run"}
         </button>
+
         <Link
           href={`/dashboard/${dag.dag_id}`}
           className="text-xs text-gray-500 hover:text-gray-700 underline"
         >
           View history
         </Link>
-        {error && (
-          <span className="text-xs text-red-600">{error}</span>
+
+        {triggeredRunId && (
+          <Link
+            href={`/dashboard/${dag.dag_id}/runs/${encodeURIComponent(triggeredRunId)}`}
+            className="flex items-center gap-1.5 rounded-md border border-green-500 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+          >
+            <Activity className="h-3.5 w-3.5" />
+            Live Logs
+          </Link>
         )}
+
+        {error && <span className="text-xs text-red-600">{error}</span>}
       </div>
     </div>
   );
