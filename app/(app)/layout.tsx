@@ -16,7 +16,7 @@ export default async function AppLayout({
         role={session.user.role}
         userName={session.user.name ?? session.user.email ?? ""}
       />
-      <main className="flex-1 overflow-y-auto bg-gray-50 p-6">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-slate-50 px-8 py-8">{children}</main>
     </div>
   );
 }

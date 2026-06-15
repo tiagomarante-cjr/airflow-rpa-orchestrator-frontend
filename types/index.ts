@@ -19,10 +19,18 @@ export interface DAGRun {
   run_type: string;
 }
 
+export interface AirflowLogEntry {
+  timestamp?: string;
+  event: string;
+  level?: string;
+  logger?: string;
+  sources?: string[];
+}
+
 export interface TaskLog {
   task_id: string;
   try_number: number;
-  content: string;
+  content: string | AirflowLogEntry[];
 }
 
 export interface Permission {

@@ -1,10 +1,90 @@
 "use client";
 
-import { Activity, Calendar, Clock, Play } from "lucide-react";
+import { Activity, Calendar, CheckCircle2, Clock, Loader2, Play, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { DAG } from "@/types";
-import { StatusBadge } from "./StatusBadge";
+
+function parseCron(expr: string): string {
+  const named: Record<string, string> = {
+    "@daily": "Daily at midnight",
+    "@hourly": "Every hour",
+    "@weekly": "Weekly on Sunday",
+    "@monthly": "Monthly on the 1st",
+    "@yearly": "Yearly on Jan 1st",
+    "@once": "Once",
+    None: "No schedule",
+  };
+  if (named[expr]) return named[expr];
+
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length !== 5) return expr;
+
+  const [minute, hour, dom, month, dow] = parts;
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const timeLabel =
+    hour !== "*" && minute !== "*"
+      ? `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`
+      : null;
+
+  if (dom === "*" && month === "*" && dow === "*") {
+    if (timeLabel) return `Daily at ${timeLabel}`;
+    if (hour.startsWith("*/")) return `Every ${hour.slice(2)} hours`;
+    if (minute.startsWith("*/")) return `Every ${minute.slice(2)} minutes`;
+  }
+
+  if (dom === "*" && month === "*" && /^\d$/.test(dow) && timeLabel)
+    return `Weekly on ${DAYS[+dow]} at ${timeLabel}`;
+
+  if (dom !== "*" && month === "*" && dow === "*" && timeLabel)
+    return `Monthly on day ${dom} at ${timeLabel}`;
+
+  return expr;
+}
+
+function formatNextRun(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const diffMs = date.getTime() - now.getTime();
+  const diffH = Math.round(diffMs / 1000 / 3600);
+  const diffM = Math.round(diffMs / 1000 / 60);
+
+  if (diffM < 60) return `in ${diffM}m`;
+  if (diffH < 24) return `in ${diffH}h`;
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function LastRunIcon({ state }: { state: string }) {
+  if (state === "success")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+        <CheckCircle2 className="h-3 w-3" />
+        Successful
+      </span>
+    );
+  if (state === "failed")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
+        <XCircle className="h-3 w-3" />
+        Failed
+      </span>
+    );
+  if (state === "running")
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Running
+      </span>
+    );
+  return null;
+}
 
 export function DAGCard({ dag }: { dag: DAG }) {
   const [triggering, setTriggering] = useState(false);
@@ -34,44 +114,48 @@ export function DAGCard({ dag }: { dag: DAG }) {
   }
 
   return (
-    <div className="rounded-lg border bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+    <div className="group relative flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5">
+      {/* Top row */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <Link
             href={`/dashboard/${dag.dag_id}`}
-            className="truncate text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+            className="block truncate text-sm font-semibold text-slate-900 transition-colors hover:text-indigo-600"
           >
             {dag.dag_id}
           </Link>
           {dag.description && (
-            <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-              {dag.description}
-            </p>
+            <p className="mt-1 line-clamp-2 text-xs text-slate-500">{dag.description}</p>
           )}
         </div>
-        {dag.last_run && <StatusBadge state={dag.last_run.state} />}
+        {dag.last_run && <LastRunIcon state={dag.last_run.state} />}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+      {/* Meta row */}
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
         {dag.schedule_interval && (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
-            {dag.schedule_interval}
+            {parseCron(dag.schedule_interval)}
           </span>
         )}
         {dag.next_dagrun && (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5" />
-            Next: {new Date(dag.next_dagrun).toLocaleString()}
+            Next run {formatNextRun(dag.next_dagrun)}
           </span>
         )}
       </div>
 
-      <div className="mt-4 flex items-center gap-3 flex-wrap">
+      {/* Divider */}
+      <div className="my-4 h-px bg-slate-100" />
+
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={handleTrigger}
           disabled={triggering}
-          className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/30 disabled:opacity-50"
         >
           <Play className="h-3.5 w-3.5" />
           {triggering ? "Triggering…" : "Trigger Run"}
@@ -79,7 +163,7 @@ export function DAGCard({ dag }: { dag: DAG }) {
 
         <Link
           href={`/dashboard/${dag.dag_id}`}
-          className="text-xs text-gray-500 hover:text-gray-700 underline"
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50"
         >
           View history
         </Link>
@@ -87,14 +171,14 @@ export function DAGCard({ dag }: { dag: DAG }) {
         {triggeredRunId && (
           <Link
             href={`/dashboard/${dag.dag_id}/runs/${encodeURIComponent(triggeredRunId)}`}
-            className="flex items-center gap-1.5 rounded-md border border-green-500 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
           >
             <Activity className="h-3.5 w-3.5" />
             Live Logs
           </Link>
         )}
 
-        {error && <span className="text-xs text-red-600">{error}</span>}
+        {error && <span className="text-xs text-red-500">{error}</span>}
       </div>
     </div>
   );
