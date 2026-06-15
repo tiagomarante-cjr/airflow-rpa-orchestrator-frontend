@@ -1,0 +1,4 @@
+{
+  "admin@company.com": ["*"],
+  "user@company.com": ["Weekly_Credit_Card_Revolut"]
+}
