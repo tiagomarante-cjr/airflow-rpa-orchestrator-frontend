@@ -24,7 +24,8 @@ export async function GET(
     }
   }
 
-  const encodedRunId = encodeURIComponent(runId);
+  // FastAPI does not decode %2B in path segments — keep + literal
+  const encodedRunId = encodeURIComponent(runId).replace(/%2B/gi, "+");
 
   let tasks: Array<{ task_id: string; try_number: number; map_index?: number }> = [];
   try {

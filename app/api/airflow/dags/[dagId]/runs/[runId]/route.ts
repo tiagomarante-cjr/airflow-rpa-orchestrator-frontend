@@ -24,14 +24,15 @@ export async function GET(
     }
   }
 
+  // FastAPI does not decode %2B in path segments — keep + literal
+  const airflowRunId = encodeURIComponent(runId).replace(/%2B/gi, "+");
+
   try {
-    const run = await airflowRequest(
-      "get",
-      `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}`,
-    );
+    const run = await airflowRequest("get", `/api/v2/dags/${dagId}/dagRuns/${airflowRunId}`);
     return NextResponse.json(run);
-  } catch (err) {
-    console.error("Airflow single run error:", err);
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    console.error(`[runs/${dagId}] state fetch failed — HTTP ${status ?? "network error"}`);
     return NextResponse.json({ error: "Failed to fetch run" }, { status: 502 });
   }
 }

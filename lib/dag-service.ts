@@ -63,14 +63,18 @@ export async function getLogsForRun(
   dagId: string,
   runId: string,
 ): Promise<TaskLog[]> {
+  // FastAPI does not decode %2B in path segments — keep + literal
+  const encodedRunId = encodeURIComponent(runId).replace(/%2B/gi, "+");
+
   let tasksData: { task_instances?: Array<{ task_id: string; try_number: number; map_index?: number }> };
   try {
     tasksData = await airflowRequest(
       "get",
-      `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}/taskInstances`,
+      `/api/v2/dags/${dagId}/dagRuns/${encodedRunId}/taskInstances`,
     );
-  } catch (err) {
-    console.error("[dag-service] taskInstances fetch failed", { dagId, runId }, err);
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    console.error(`[dag-service] taskInstances fetch failed — HTTP ${status ?? "network error"} for ${dagId}/${runId}`);
     return [];
   }
 
@@ -83,8 +87,8 @@ export async function getLogsForRun(
       const mapIndex = task.map_index ?? -1;
       const logPath =
         mapIndex >= 0
-          ? `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}/taskInstances/${task.task_id}/${mapIndex}/logs/${tryNumber}`
-          : `/api/v2/dags/${dagId}/dagRuns/${encodeURIComponent(runId)}/taskInstances/${task.task_id}/logs/${tryNumber}`;
+          ? `/api/v2/dags/${dagId}/dagRuns/${encodedRunId}/taskInstances/${task.task_id}/${mapIndex}/logs/${tryNumber}`
+          : `/api/v2/dags/${dagId}/dagRuns/${encodedRunId}/taskInstances/${task.task_id}/logs/${tryNumber}`;
       try {
         const logData = await airflowRequest("get", logPath);
         return {
