@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { getAppSession } from "@/lib/session";
-import { getAllPermissions } from "@/lib/permissions";
 import { getDagsForUser } from "@/lib/dag-service";
+import { getAllPermissions } from "@/lib/permissions";
+import { getAppSession } from "@/lib/session";
 import { AdminPermissionsTable } from "./AdminPermissionsTable";
 
 export default async function AdminPage() {

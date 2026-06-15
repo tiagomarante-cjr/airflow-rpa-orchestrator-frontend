@@ -21,7 +21,10 @@ export async function GET(
   }
 
   const dagIds = getPermissions(decodeURIComponent(email));
-  return NextResponse.json({ email: decodeURIComponent(email), dag_ids: dagIds });
+  return NextResponse.json({
+    email: decodeURIComponent(email),
+    dag_ids: dagIds,
+  });
 }
 
 export async function PUT(
@@ -43,5 +46,8 @@ export async function PUT(
   const dagIds: string[] = body.dag_ids ?? [];
 
   setPermissions(decodeURIComponent(email), dagIds);
-  return NextResponse.json({ email: decodeURIComponent(email), dag_ids: dagIds });
+  return NextResponse.json({
+    email: decodeURIComponent(email),
+    dag_ids: dagIds,
+  });
 }

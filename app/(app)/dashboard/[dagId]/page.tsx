@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { getRunsForDag } from "@/lib/dag-service";
+import Link from "next/link";
 import { RunsTable } from "@/components/RunsTable";
+import { getRunsForDag } from "@/lib/dag-service";
 
 export default async function RunHistoryPage({
   params,

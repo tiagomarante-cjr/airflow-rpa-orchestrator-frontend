@@ -1,14 +1,9 @@
 "use client";
 
+import { LayoutDashboard, LogOut, ShieldCheck, Workflow } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import {
-  LayoutDashboard,
-  ShieldCheck,
-  LogOut,
-  Workflow,
-} from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -33,15 +28,24 @@ export function Sidebar({
       <div className="flex items-center gap-3 border-b border-gray-700 px-5 py-4">
         <Workflow className="h-6 w-6 text-blue-400" />
         <span className="text-sm font-semibold leading-tight">
-          RPA<br />
-          <span className="text-gray-400 text-xs font-normal">Orchestrator</span>
+          RPA
+          <br />
+          <span className="text-gray-400 text-xs font-normal">
+            Orchestrator
+          </span>
         </span>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => (
-          <NavItem key={href} label={label} href={href} icon={<Icon className="h-4 w-4" />} active={pathname === href || pathname.startsWith(href + "/")} />
+          <NavItem
+            key={href}
+            label={label}
+            href={href}
+            icon={<Icon className="h-4 w-4" />}
+            active={pathname === href || pathname.startsWith(href + "/")}
+          />
         ))}
 
         {role === "admin" && (
@@ -50,7 +54,13 @@ export function Sidebar({
               Admin
             </div>
             {ADMIN_ITEMS.map(({ label, href, icon: Icon }) => (
-              <NavItem key={href} label={label} href={href} icon={<Icon className="h-4 w-4" />} active={pathname.startsWith(href)} />
+              <NavItem
+                key={href}
+                label={label}
+                href={href}
+                icon={<Icon className="h-4 w-4" />}
+                active={pathname.startsWith(href)}
+              />
             ))}
           </>
         )}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { airflowRequest } from "@/lib/airflow";
+import { authOptions } from "@/lib/auth";
 import { getPermissions } from "@/lib/permissions";
 
 export async function GET(
@@ -58,6 +58,9 @@ export async function GET(
     return NextResponse.json(logs);
   } catch (err) {
     console.error("Airflow logs error:", err);
-    return NextResponse.json({ error: "Failed to fetch logs" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to fetch logs" },
+      { status: 502 },
+    );
   }
 }

@@ -11,7 +11,9 @@ const STATE_STYLES: Record<RunState, string> = {
 };
 
 export function StatusBadge({ state }: { state: RunState | string }) {
-  const styles = STATE_STYLES[state as RunState] ?? "bg-gray-100 text-gray-700 border-gray-200";
+  const styles =
+    STATE_STYLES[state as RunState] ??
+    "bg-gray-100 text-gray-700 border-gray-200";
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${styles}`}

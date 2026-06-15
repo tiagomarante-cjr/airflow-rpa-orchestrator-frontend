@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Calendar, Clock, Play } from "lucide-react";
 import Link from "next/link";
-import { Play, Clock, Calendar } from "lucide-react";
-import { StatusBadge } from "./StatusBadge";
+import { useState } from "react";
 import type { DAG } from "@/types";
+import { StatusBadge } from "./StatusBadge";
 
 export function DAGCard({ dag }: { dag: DAG }) {
   const [triggering, setTriggering] = useState(false);
@@ -41,12 +41,12 @@ export function DAGCard({ dag }: { dag: DAG }) {
             {dag.dag_id}
           </Link>
           {dag.description && (
-            <p className="mt-1 text-sm text-gray-500 line-clamp-2">{dag.description}</p>
+            <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+              {dag.description}
+            </p>
           )}
         </div>
-        {dag.last_run && (
-          <StatusBadge state={dag.last_run.state} />
-        )}
+        {dag.last_run && <StatusBadge state={dag.last_run.state} />}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500">
@@ -80,7 +80,9 @@ export function DAGCard({ dag }: { dag: DAG }) {
           View history
         </Link>
         {message && (
-          <span className={`text-xs ${message.includes("success") ? "text-green-600" : "text-red-600"}`}>
+          <span
+            className={`text-xs ${message.includes("success") ? "text-green-600" : "text-red-600"}`}
+          >
             {message}
           </span>
         )}

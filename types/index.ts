@@ -37,4 +37,9 @@ export interface User {
   name: string;
 }
 
-export type RunState = "success" | "failed" | "running" | "queued" | "scheduled";
+export type RunState =
+  | "success"
+  | "failed"
+  | "running"
+  | "queued"
+  | "scheduled";

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { StatusBadge } from "./StatusBadge";
 import type { DAGRun } from "@/types";
+import { StatusBadge } from "./StatusBadge";
 
 function duration(start: string | null, end: string | null): string {
   if (!start || !end) return "—";
@@ -40,7 +40,9 @@ export function RunsTable({ dagId, runs }: { dagId: string; runs: DAGRun[] }) {
                 {run.dag_run_id}
               </td>
               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                {run.start_date ? new Date(run.start_date).toLocaleString() : "—"}
+                {run.start_date
+                  ? new Date(run.start_date).toLocaleString()
+                  : "—"}
               </td>
               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                 {run.end_date ? new Date(run.end_date).toLocaleString() : "—"}

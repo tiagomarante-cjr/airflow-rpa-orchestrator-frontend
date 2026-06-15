@@ -1,8 +1,11 @@
+import type { DAG, DAGRun, TaskLog } from "@/types";
 import { airflowRequest } from "./airflow";
 import { getPermissions } from "./permissions";
-import type { DAG, DAGRun, TaskLog } from "@/types";
 
-export async function getDagsForUser(email: string, role: string): Promise<DAG[]> {
+export async function getDagsForUser(
+  email: string,
+  role: string,
+): Promise<DAG[]> {
   const data = await airflowRequest("get", "/api/v2/dags?limit=100");
   const allDags: DAG[] = data.dags ?? [];
   if (role === "admin") return allDags;
@@ -18,7 +21,10 @@ export async function getRunsForDag(dagId: string): Promise<DAGRun[]> {
   return data.dag_runs ?? [];
 }
 
-export async function getLogsForRun(dagId: string, runId: string): Promise<TaskLog[]> {
+export async function getLogsForRun(
+  dagId: string,
+  runId: string,
+): Promise<TaskLog[]> {
   const tasksData = await airflowRequest(
     "get",
     `/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances`,

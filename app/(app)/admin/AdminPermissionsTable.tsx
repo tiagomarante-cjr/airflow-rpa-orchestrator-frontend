@@ -1,7 +1,7 @@
 "use client";
 
+import { Check, Save } from "lucide-react";
 import { useState } from "react";
-import { Save, Check } from "lucide-react";
 
 interface UserPerms {
   email: string;
@@ -96,7 +96,9 @@ export function AdminPermissionsTable({
             </div>
 
             {allDagIds.length === 0 ? (
-              <p className="text-xs text-gray-400">No DAGs available from Airflow.</p>
+              <p className="text-xs text-gray-400">
+                No DAGs available from Airflow.
+              </p>
             ) : (
               <>
                 <div className="mb-2 flex items-center gap-2">

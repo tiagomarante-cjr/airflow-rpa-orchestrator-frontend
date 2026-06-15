@@ -35,7 +35,12 @@ export const authOptions: NextAuthOptions = {
             u.password === credentials.password,
         );
         if (!user) return null;
-        return { id: user.email, email: user.email, name: user.name, role: user.role };
+        return {
+          id: user.email,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
       },
     }),
   ],

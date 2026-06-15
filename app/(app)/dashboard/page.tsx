@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { getAppSession } from "@/lib/session";
-import { getDagsForUser } from "@/lib/dag-service";
 import { DAGCard } from "@/components/DAGCard";
+import { getDagsForUser } from "@/lib/dag-service";
+import { getAppSession } from "@/lib/session";
 
 export default async function DashboardPage() {
   const session = await getAppSession();

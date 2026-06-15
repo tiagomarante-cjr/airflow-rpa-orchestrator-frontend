@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { airflowRequest } from "@/lib/airflow";
+import { authOptions } from "@/lib/auth";
 import { getPermissions } from "@/lib/permissions";
 
 export async function GET() {
@@ -28,6 +28,9 @@ export async function GET() {
     return NextResponse.json(filtered);
   } catch (err) {
     console.error("Airflow DAGs error:", err);
-    return NextResponse.json({ error: "Failed to fetch DAGs" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to fetch DAGs" },
+      { status: 502 },
+    );
   }
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { airflowRequest } from "@/lib/airflow";
+import { authOptions } from "@/lib/auth";
 import { getPermissions } from "@/lib/permissions";
 
 export async function POST(
@@ -31,6 +31,9 @@ export async function POST(
     return NextResponse.json(data);
   } catch (err) {
     console.error("Airflow trigger error:", err);
-    return NextResponse.json({ error: "Failed to trigger DAG" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to trigger DAG" },
+      { status: 502 },
+    );
   }
 }
