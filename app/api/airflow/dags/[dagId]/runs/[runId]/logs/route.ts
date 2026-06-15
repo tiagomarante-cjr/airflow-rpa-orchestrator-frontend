@@ -24,43 +24,38 @@ export async function GET(
     }
   }
 
+  const encodedRunId = encodeURIComponent(runId);
+
+  let tasks: Array<{ task_id: string; try_number: number; map_index?: number }> = [];
   try {
-    // Fetch task instances for this run to get per-task logs
     const tasksData = await airflowRequest(
       "get",
-      `/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances`,
+      `/api/v2/dags/${dagId}/dagRuns/${encodedRunId}/taskInstances`,
     );
-    const tasks: Array<{ task_id: string; try_number: number }> =
-      tasksData.task_instances ?? [];
-
-    const logs = await Promise.all(
-      tasks.map(async (task) => {
-        try {
-          const logData = await airflowRequest(
-            "get",
-            `/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances/${task.task_id}/logs/${task.try_number ?? 1}`,
-          );
-          return {
-            task_id: task.task_id,
-            try_number: task.try_number ?? 1,
-            content: logData.content ?? logData,
-          };
-        } catch {
-          return {
-            task_id: task.task_id,
-            try_number: task.try_number ?? 1,
-            content: "[Log unavailable]",
-          };
-        }
-      }),
-    );
-
-    return NextResponse.json(logs);
-  } catch (err) {
-    console.error("Airflow logs error:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch logs" },
-      { status: 502 },
-    );
+    tasks = tasksData.task_instances ?? [];
+  } catch {
+    // Run was stopped/killed — task instances unavailable, return empty logs gracefully
+    return NextResponse.json([]);
   }
+
+  if (tasks.length === 0) return NextResponse.json([]);
+
+  const logs = await Promise.all(
+    tasks.map(async (task) => {
+      const tryNumber = Math.max(1, task.try_number || 1);
+      const mapIndex = task.map_index ?? -1;
+      const logPath =
+        mapIndex >= 0
+          ? `/api/v2/dags/${dagId}/dagRuns/${encodedRunId}/taskInstances/${task.task_id}/${mapIndex}/logs/${tryNumber}`
+          : `/api/v2/dags/${dagId}/dagRuns/${encodedRunId}/taskInstances/${task.task_id}/logs/${tryNumber}`;
+      try {
+        const logData = await airflowRequest("get", logPath);
+        return { task_id: task.task_id, try_number: tryNumber, content: logData.content ?? logData };
+      } catch {
+        return { task_id: task.task_id, try_number: tryNumber, content: "[Log unavailable]" };
+      }
+    }),
+  );
+
+  return NextResponse.json(logs);
 }

@@ -145,7 +145,8 @@ export function LiveLogViewer({ dagId, runId }: { dagId: string; runId: string }
         if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       }
     } catch {
-      setError("Failed to fetch logs. Retrying…");
+      // Only show error if we have no logs yet — otherwise keep showing what we have
+      setError((prev) => (logs.length === 0 ? "Failed to fetch logs. Retrying…" : prev));
     }
   }, [fetchRunState, fetchLogs]);
 
