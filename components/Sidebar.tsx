@@ -1,19 +1,28 @@
 "use client";
 
-import { LayoutDashboard, LogOut, ShieldCheck, Workflow } from "lucide-react";
+import { LayoutDashboard, LogOut, ShieldCheck, User, Workflow } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Profile", href: "/profile", icon: User },
 ];
 
 const ADMIN_ITEMS = [
   { label: "Permissions", href: "/admin", icon: ShieldCheck },
 ];
 
-export function Sidebar({ role, userName }: { role: string; userName: string }) {
+export function Sidebar({
+  role,
+  userName,
+  userImage,
+}: {
+  role: string;
+  userName: string;
+  userImage?: string | null;
+}) {
   const pathname = usePathname();
 
   return (
@@ -94,8 +103,16 @@ export function Sidebar({ role, userName }: { role: string; userName: string }) 
       <div className="mx-3 h-px bg-white/5" />
       <div className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-400">
-            {userName.charAt(0).toUpperCase()}
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-400">
+            {userImage ? (
+              <img
+                src={userImage}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              userName.charAt(0).toUpperCase()
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-slate-300">
