@@ -227,13 +227,13 @@ export function ProfileClient({
           ) : Object.keys(permissions).length === 0 ? (
             <p className="text-sm text-slate-400">No DAGs assigned.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="grid gap-2" style={{ gridTemplateColumns: "max-content 1fr" }}>
               {Object.entries(permissions).map(([dagId, actions]) => (
-                <div key={dagId} className="flex items-center gap-3">
-                  <span className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/30">
+                <>
+                  <span key={`${dagId}-name`} className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/30 self-center">
                     {dagId}
                   </span>
-                  <div className="flex gap-1.5">
+                  <div key={`${dagId}-actions`} className="flex items-center gap-1.5">
                     {actions.map((action) => (
                       <span
                         key={action}
@@ -243,7 +243,7 @@ export function ProfileClient({
                       </span>
                     ))}
                   </div>
-                </div>
+                </>
               ))}
             </div>
           )}
