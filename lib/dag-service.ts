@@ -39,7 +39,10 @@ export async function getDagsForUser(
 
   const permitted = role === "admin" ? null : getPermissions(email);
   const filtered = permitted
-    ? raw.filter((d: { dag_id: string }) => permitted.includes(d.dag_id))
+    ? raw.filter((d: { dag_id: string }) => {
+        if (permitted["*"]) return true;
+        return (permitted[d.dag_id] ?? []).includes("read");
+      })
     : raw;
 
   return Promise.all(

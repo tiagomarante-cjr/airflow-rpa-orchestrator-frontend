@@ -33,9 +33,11 @@ export interface TaskLog {
   content: string | AirflowLogEntry[];
 }
 
+export type DagAction = "read" | "trigger";
+
 export interface Permission {
   email: string;
-  dag_ids: string[];
+  dags: Record<string, DagAction[]>;
 }
 
 export interface User {

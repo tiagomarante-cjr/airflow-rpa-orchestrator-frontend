@@ -1,4 +1,10 @@
 {
-  "admin@company.com": ["*"],
-  "user@company.com": ["Weekly_Credit_Card_Revolut"]
+  "admin@company.com": {
+    "*": ["read", "trigger"]
+  },
+  "user@company.com": {
+    "Weekly_Credit_Card_Revolut": ["read"],
+    "Daily_Extraction_Santander": ["read", "trigger"],
+    "Daily_Extraction_Bankinter": ["read", "trigger"]
+  }
 }
