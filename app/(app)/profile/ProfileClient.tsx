@@ -8,7 +8,7 @@ interface ProfileClientProps {
   initialName: string;
   initialImage: string | null;
   role: string;
-  permissions: string[];
+  permissions: Record<string, string[]>;
 }
 
 export function ProfileClient({
@@ -65,7 +65,7 @@ export function ProfileClient({
     }
   }
 
-  const isWildcard = permissions.includes("*");
+  const isWildcard = "*" in permissions;
 
   return (
     <div className="max-w-2xl space-y-6">
