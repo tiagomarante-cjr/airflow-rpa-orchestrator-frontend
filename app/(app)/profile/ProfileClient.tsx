@@ -8,7 +8,7 @@ interface ProfileClientProps {
   initialName: string;
   initialImage: string | null;
   role: string;
-  permissions: string[];
+  permissions: Record<string, string[]>;
 }
 
 export function ProfileClient({
@@ -65,7 +65,7 @@ export function ProfileClient({
     }
   }
 
-  const isWildcard = permissions.includes("*");
+  const isWildcard = "*" in permissions;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -209,21 +209,41 @@ export function ProfileClient({
         </div>
         <div className="px-5 py-4">
           {isWildcard ? (
-            <p className="text-sm text-slate-700">
-              <span className="font-medium text-indigo-700">All DAGs</span>
-              {" — "}full access (wildcard)
-            </p>
-          ) : permissions.length === 0 ? (
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/30">
+                All DAGs (wildcard)
+              </span>
+              <div className="flex gap-1.5">
+                {permissions["*"].map((action) => (
+                  <span
+                    key={action}
+                    className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-500/30"
+                  >
+                    {action}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : Object.keys(permissions).length === 0 ? (
             <p className="text-sm text-slate-400">No DAGs assigned.</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {permissions.map((dagId) => (
-                <span
-                  key={dagId}
-                  className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/30"
-                >
-                  {dagId}
-                </span>
+            <div className="grid gap-2" style={{ gridTemplateColumns: "max-content 1fr" }}>
+              {Object.entries(permissions).map(([dagId, actions]) => (
+                <>
+                  <span key={`${dagId}-name`} className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/30 self-center">
+                    {dagId}
+                  </span>
+                  <div key={`${dagId}-actions`} className="flex items-center gap-1.5">
+                    {actions.map((action) => (
+                      <span
+                        key={action}
+                        className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-500/30"
+                      >
+                        {action}
+                      </span>
+                    ))}
+                  </div>
+                </>
               ))}
             </div>
           )}
