@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { airflowRequest } from "@/lib/airflow";
 import { authOptions } from "@/lib/auth";
-import { getPermissions } from "@/lib/permissions";
+import { hasAction } from "@/lib/permissions";
 
 export async function GET(
   _request: Request,
@@ -17,11 +17,8 @@ export async function GET(
   const email = session.user.email;
   const role = (session.user as typeof session.user & { role: string }).role;
 
-  if (role !== "admin") {
-    const permitted = getPermissions(email);
-    if (!permitted.includes(dagId)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  if (role !== "admin" && !hasAction(email, dagId, "read")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // FastAPI does not decode %2B in path segments — keep + literal
