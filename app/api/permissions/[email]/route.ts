@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getPermissions, setPermissions } from "@/lib/permissions";
+import type { DagAction } from "@/types";
 
 export async function GET(
   _request: NextRequest,
@@ -15,16 +16,12 @@ export async function GET(
   const { email } = await params;
   const role = (session.user as typeof session.user & { role: string }).role;
 
-  // Users may only read their own permissions; admins may read any
   if (role !== "admin" && session.user.email !== decodeURIComponent(email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const dagIds = getPermissions(decodeURIComponent(email));
-  return NextResponse.json({
-    email: decodeURIComponent(email),
-    dag_ids: dagIds,
-  });
+  const dags = getPermissions(decodeURIComponent(email));
+  return NextResponse.json({ email: decodeURIComponent(email), dags });
 }
 
 export async function PUT(
@@ -43,11 +40,8 @@ export async function PUT(
 
   const { email } = await params;
   const body = await request.json();
-  const dagIds: string[] = body.dag_ids ?? [];
+  const dags: Record<string, DagAction[]> = body.dags ?? {};
 
-  setPermissions(decodeURIComponent(email), dagIds);
-  return NextResponse.json({
-    email: decodeURIComponent(email),
-    dag_ids: dagIds,
-  });
+  setPermissions(decodeURIComponent(email), dags);
+  return NextResponse.json({ email: decodeURIComponent(email), dags });
 }
