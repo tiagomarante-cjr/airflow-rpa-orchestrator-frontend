@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { DAGCard } from "@/components/DAGCard";
 import { getDagsForUser } from "@/lib/dag-service";
+import { getPermissions } from "@/lib/permissions";
 import { getAppSession } from "@/lib/session";
 import { LayoutDashboard } from "lucide-react";
 
@@ -8,7 +9,18 @@ export default async function DashboardPage() {
   const session = await getAppSession();
   if (!session) redirect("/login");
 
-  const dags = await getDagsForUser(session.user.email!, session.user.role);
+  const { email, role } = session.user as { email: string; role: string; name?: string };
+  const dags = await getDagsForUser(email, role);
+
+  const isAdmin = role === "admin";
+  const perms = isAdmin ? null : getPermissions(email);
+
+  function canTrigger(dagId: string): boolean {
+    if (isAdmin) return true;
+    if (!perms) return false;
+    if (perms["*"]) return perms["*"].includes("trigger");
+    return (perms[dagId] ?? []).includes("trigger");
+  }
 
   return (
     <div>
@@ -24,7 +36,7 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-slate-500">
             Welcome back,{" "}
             <span className="font-medium text-slate-700">
-              {session.user.name ?? session.user.email}
+              {session.user.name ?? email}
             </span>
             {" — "}
             {dags.length} DAG{dags.length !== 1 ? "s" : ""} available
@@ -39,7 +51,7 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
           {dags.map((dag) => (
-            <DAGCard key={dag.dag_id} dag={dag} />
+            <DAGCard key={dag.dag_id} dag={dag} canTrigger={canTrigger(dag.dag_id)} />
           ))}
         </div>
       )}

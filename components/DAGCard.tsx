@@ -86,7 +86,7 @@ function LastRunIcon({ state }: { state: string }) {
   return null;
 }
 
-export function DAGCard({ dag }: { dag: DAG }) {
+export function DAGCard({ dag, canTrigger }: { dag: DAG; canTrigger: boolean }) {
   const [triggering, setTriggering] = useState(false);
   const [triggeredRunId, setTriggeredRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,14 +152,21 @@ export function DAGCard({ dag }: { dag: DAG }) {
 
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={handleTrigger}
-          disabled={triggering}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/30 disabled:opacity-50"
-        >
-          <Play className="h-3.5 w-3.5" />
-          {triggering ? "Triggering…" : "Trigger Run"}
-        </button>
+        {canTrigger ? (
+          <button
+            onClick={handleTrigger}
+            disabled={triggering}
+            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/30 disabled:opacity-50"
+          >
+            <Play className="h-3.5 w-3.5" />
+            {triggering ? "Triggering…" : "Trigger Run"}
+          </button>
+        ) : (
+          <span className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-400">
+            <Play className="h-3.5 w-3.5" />
+            Read-only
+          </span>
+        )}
 
         <Link
           href={`/dashboard/${dag.dag_id}`}
